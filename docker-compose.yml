@@ -1,0 +1,90 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: violence_detection_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: violence_detection
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: violence_detection_redis
+    ports:
+      - "6379:6379"
+
+  ai_service:
+    build:
+      context: .
+      dockerfile: ai_service/Dockerfile
+    container_name: violence_detection_ai
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/workspace
+    depends_on:
+      - redis
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: violence_detection_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=violence_detection
+      - REDIS_HOST=redis
+      - AI_SERVICE_URL=http://ai_service:8001
+      - PYTHONPATH=/workspace
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ai_service:
+        condition: service_started
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: violence_detection_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: violence_detection_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: violence_detection_grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  pgdata:
