@@ -102,3 +102,19 @@ AVIP implements multiple layers of Explainable AI (XAI):
 * **SHAP (SHapley Additive exPlanations)**: Uses a Leave-One-Out marginal contribution approximation for fast, scalable calculation of Shapley values.
 * **Attention Activation Weights**: Extracts self-attention matrices from the attention layer, averaging across heads to render word activation intensities.
 * **Natural Explanations**: Generates a bilingual summary (Urdu/English) detailing the primary trigger tokens influencing classification.
+
+---
+
+## Vercel Deployment (Frontend)
+
+The frontend of this project is built with Next.js and is fully compatible with Vercel deployment. Since it is set up as a monorepo, follow these steps to deploy it:
+
+### Step-by-Step Deployment
+1. Go to your [Vercel Dashboard](https://vercel.com) and click **Add New > Project**.
+2. Import this GitHub repository.
+3. In the **Configure Project** step:
+   * **Root Directory**: Click *Edit* and select the `frontend` directory.
+   * **Framework Preset**: Select **Next.js**.
+   * **Build and Output Settings**: Keep the default settings (they will automatically read from `frontend/package.json` and `frontend/vercel.json`).
+4. Click **Deploy**. Vercel will build the Next.js app and provide a live URL.
+
